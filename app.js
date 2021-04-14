@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const passport = require("passport")
 const flash = require("connect-flash");
 const session = require("express-session")
+const helmet = require("helmet");
 require("dotenv").config();
 require("./config/passport-setup");
 const router = require("./routes");
@@ -11,6 +12,8 @@ const app = express()
 
 app.set("view engine","html");
 app.engine("html", require("ejs").renderFile)
+
+app.use(helmet())
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -24,7 +27,6 @@ app.use(session({
 
 app.use(passport.initialize())
 app.use(passport.session());
-
 
 app.use(flash())
 
