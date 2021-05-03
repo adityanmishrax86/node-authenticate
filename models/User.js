@@ -1,21 +1,28 @@
-const { Sequelize, DataTypes } = require("sequelize");
-const {sequelize} = require("./index");
+const mongoose = require('mongoose')
 
-const User = sequelize.define('User',{
-    //Model Attributes
-    id:{
-      type:DataTypes.UUID,
-        defaultValue:Sequelize.UUIDV4
-    },
-    firstname:{
-        type:DataTypes.STRING,
-        allowNull:false
-    },
-    lastname: {
-        type:DataTypes.STRING
-    },
+const userSchema = new mongoose.Schema({
     email: {
-        type:DataTypes.STRING,
-        allowNull: false
+        type:String,
+        required:true,
+        index: {
+            unique:true
+        }
+    },
+    password: {
+        type:String,
+    },
+    firstname: {
+        type:String,
+        required:true
+    },
+    lastname:{
+        type:String,
+        required:true
     }
-},{})
+})
+
+const User = mongoose.model('User',userSchema);
+
+module.exports = {
+    User
+}
