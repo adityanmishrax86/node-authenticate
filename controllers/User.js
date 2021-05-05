@@ -1,4 +1,5 @@
 const { User } = require("../models/User");
+const passport = require('passport');
 
 module.exports = {
     async getAllUsers(req, res) {
@@ -54,7 +55,7 @@ module.exports = {
                 new:true
             });
         }catch (err) {
-            return res.status(403).status("Some Error Occured")
+            return res.status(403).send("Some Error Occured")
         }
         return res.status(203).send(user);
 
@@ -68,5 +69,22 @@ module.exports = {
             return res.status(403).send("SOme Error occured")
         }
         return res.status(203).send([]);
+    },
+    async login(req, res, next) {
+        const { email, password } = req.body;
+        if(!email || !password)
+            return res.redirect("/login");
+
+        passport.authenticate('local', {
+                successRedirect:"/view",
+                failureRedirect:"/",
+            },(err, user) => {
+            if(err)
+                return next(err);
+
+            if(!user)
+                return next(err);
+        },
+            )
     }
 }

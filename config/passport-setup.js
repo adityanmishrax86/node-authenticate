@@ -1,6 +1,7 @@
 const passport = require("passport")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const LocalStrategy = require("passport-local")
+
 const { User } = require("../models/User");
 
 passport.use(new LocalStrategy(async (username, password, done) => {
@@ -23,7 +24,7 @@ passport.use(new LocalStrategy(async (username, password, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret:process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL:"http://localhost:4000/auth/google/callback"
+    callbackURL:"http://localhost:4000/user/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     const { given_name, family_name, email } = profile._json;
     let user;

@@ -6,10 +6,10 @@ const session = require("express-session")
 const helmet = require("helmet");
 require("dotenv").config();
 require("./config/passport-setup");
-const router = require("./routes");
 const userRouter = require("./routes/users");
 const recipeRouter = require("./routes/recipes");
 const mongoose = require("mongoose");
+const homeRouter = require("./routes/home");
 
 const app = express()
 
@@ -33,9 +33,14 @@ app.use(passport.session());
 
 app.use(flash())
 
-app.use("/", router)
-app.use("/users",userRouter);
+app.use("/",homeRouter);
+app.use("/user",userRouter);
 app.use("/recipes",recipeRouter);
+
+app.use((err, req, res, next) => {
+    if(err)
+        next(err);
+})
 
 const start = async () => {
     await mongoose.connect('mongodb://localhost:27017',{
