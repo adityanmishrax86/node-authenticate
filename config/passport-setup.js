@@ -1,6 +1,7 @@
 const passport = require("passport")
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 const LocalStrategy = require("passport-local")
+const bcrypt = require('bcrypt');
 
 const { User } = require("../models/User");
 
@@ -10,13 +11,21 @@ passport.use(new LocalStrategy(async (username, password, done) => {
         user = await User.findOne({
             email: username,
         })
-        if(user){
-            return done(null, user)
-        }else{
+        if(!user) {
             return done(null, false);
         }
-    } catch {
-        console.log("Error found");
+
+        bcrypt.compare(password, user.password)
+            .then(match => {
+            if(match) {
+                return done(null, user);
+            }
+            return done(null, false);
+            })
+            .catch(err => done(err, false))
+
+    } catch(err) {
+        console.log("Error found",err);
     }
 
 }))
@@ -50,10 +59,12 @@ passport.use(new GoogleStrategy({
 }))
 
 
-passport.deserializeUser(function(user, done) {
-    done(null, user);
+passport.deserializeUser(function(id, done) {
+    User.findById(id, (err, user) => {
+        done(err, user)
+    })
 });
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+    done(null, user._id);
 });

@@ -1,7 +1,8 @@
 const { User } = require("../models/User");
 const passport = require('passport');
+const bcrypt = require('bcrypt');
 
-module.exports = {
+const userOps = {
     async getAllUsers(req, res) {
         let users;
         try {
@@ -23,33 +24,42 @@ module.exports = {
 
     },
     async addUser(req, res){
-        const { firstname, lastname, email, password } = req.body;
+        const { firstname, lastname, username, password } = req.body;
         let user;
         try {
+            //first search if user already exists or not
+            user = await User.find({
+                username
+            })
+            if(user.length !== 0)
+                return res.status(403).send("User Exists Already")
+
+            //hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+
             user = await User.create({
                 firstname,
                 lastname,
-                email,
-                password
+                email:username,
+                password:hashedPassword
             })
+
             await user.save();
+
         } catch (e) {
+            console.log(e)
             return res.status(403).send("Error in User")
         }
         return res.status(201).send(user);
-
-
     },
     async updateUser(req, res) {
-        const { firstname, lastname, email, password } = req.body;
+        const { ...details } = req.body;
         const { id } = req.params;
         let user;
         try {
             user = await User.findByIdAndUpdate(id,{
-                firstname,
-                lastname,
-                email,
-                password
+                ...details
             }, {
                 useFindAndModify:false,
                 new:true
@@ -69,22 +79,41 @@ module.exports = {
             return res.status(403).send("SOme Error occured")
         }
         return res.status(203).send([]);
-    },
-    async login(req, res, next) {
-        const { email, password } = req.body;
-        if(!email || !password)
-            return res.redirect("/login");
-
-        passport.authenticate('local', {
-                successRedirect:"/view",
-                failureRedirect:"/",
-            },(err, user) => {
-            if(err)
-                return next(err);
-
-            if(!user)
-                return next(err);
-        },
-            )
     }
+}
+
+const authOps = {
+    login(req, res, next) {
+        const { username, password }  = req.body
+        // Validate request
+        console.log(username, 1)
+        if(!username || !password) {
+            req.flash('error', 'All fields are required')
+            console.log(2)
+            return res.redirect('/')
+        }
+        passport.authenticate('local', (err, user) => {
+            if(err) {
+                console.log(3)
+                return next(err)
+            }
+            if(!user) {
+                console.log(4)
+                return res.redirect('/')
+            }
+            req.logIn(user, (err) => {
+                if(err) {
+                    req.flash('error', "info.message" )
+                    console.log(4)
+                    return next(err)
+                }
+                console.log(5)
+                return res.redirect("/view")
+            })
+        })(req, res, next)
+    }
+}
+module.exports = {
+    userOps,
+    authOps
 }
